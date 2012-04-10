@@ -2,13 +2,25 @@ import sys
 
 fn = sys.argv[1]
 f = open(fn)
-c = 0
-r = 0
+
+correct = 0
+n = 0
+
 for l in f:
     l = l.strip()
     p = l.split()
-    r += float(p[1])
-    c += 1
+    actual = p[0]
+    pr = p[1]
+    predicted = p[2]
+    if actual == predicted:
+        correct += 1
 
-rr = float(r) / float(c)
-print "Accuracy on ", c , " items ", rr
+    n += 1
+
+print "total : ", n 
+print "correct :", correct
+r = float(correct) / float(n)
+r = r * 100
+print "accuracy : ", r
+    
+f.close()

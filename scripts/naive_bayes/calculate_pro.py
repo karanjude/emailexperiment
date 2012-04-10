@@ -5,174 +5,165 @@ import sys
 db = MySQLdb.connect(user="root",passwd="",db="email")
 c = db.cursor()
 
-vocab = {}
-docs = {}
-doc_length_prob = {}
-doc_length = {}
-doc_word_count = {}
-class_prob = {}
-classes = {}
-doc_probs = {}
-doc_prob_given_class = {}
-word_class_probs = {}
-
 o = open(sys.argv[1],"w")
+train = open("train.txt")
 
-def get_doc_length(doc_id):
-    if doc_id in doc_length:
-        return doc_length[doc_id]
+cached_wid_given_cj = {}
+n_c_i = {}
+nc = {}
+vocab = {}
+cj_di = {}
+doc_count = 0
 
-    c.execute("select * from doc_length where doc_id = %s", (doc_id))
-    d = c.fetchone()[1]
-    doc_length[doc_id] = d
+def build_word_count_from_document(doc_id):
+    c.execute("select *  from doc_frequency where doc_id = %s",(doc_id))
+    
+    d = {}
+
+    for r in c:
+        word_id = r[1]
+        count = int(r[2])
+
+        if word_id not in d:
+            d[word_id] = 0
+
+        d[word_id] = count
+            
     return d
 
-def get_doc_length_prob(doc_id):
-    if doc_id in doc_length_prob:
-        return doc_length_prob[doc_id]
-
-    c.execute("select length,count(*)/20562 as pr from doc_length group by length having length = (select length from doc_length where doc_id=%s)",(doc_id));
-    prob = c.fetchone()[1]
-    doc_length_prob[doc_id] = prob
-    return prob
-
-def get_doc_word_count(doc_id, word):
-    if (doc_id,word) in doc_word_count:
-        return doc_word_count[(doc_id,word)]
-
-    c.execute("select *  from doc_frequency where doc_id = %s and word = %s",(doc_id, word))
-    r = c.fetchone()
-    rr = 0
-    if r is not None:
-        rr = int(r[2])
-    doc_word_count[(doc_id,word)] = rr
-    return rr
-
-def build_vocab(doc_id):
-    c.execute("select * from doc_frequency where doc_id = %s", doc_id)
+def populate_word_count_from_file(doc_id, class_id):
+    c.execute("select *  from doc_frequency where doc_id = %s",(doc_id))
     for r in c:
-        if r[1] not in vocab:
-            vocab[r[1]] = 0
-        vocab[r[1]] = r[2]
+        word_id = r[1]
+        count = int(r[2])
+        
+        if word_id not in n_c_i[class_id]:
+            n_c_i[class_id][word_id] = 0
+            
+        n_c_i[class_id][word_id] += count
+        nc[class_id] += 1
 
-def get_prob_of_class_given_doc(class_id, doc_id):
-    if class_id in docs[doc_id]:
-        return 1
-    return 0
+        if word_id not in vocab:
+            vocab[word_id] = 0
 
-def get_docs(doc_id):
-    #c.execute("select distinct(doc_id) from doc_frequency")
-    #for r in c:
-    #    if r[0] not in docs:
-    #doc_id = r[0]
-    p = doc_id.split('/')
+        vocab[word_id] += 1
+
+def train_from_file(path, class_id):
+    if class_id not in n_c_i:
+        n_c_i[class_id] = {}
+
+    if class_id not in nc:
+        nc[class_id] = 0
+
+    if class_id not in cj_di:
+        cj_di[class_id] = 0
+
+    cj_di[class_id] += 1
+
+    populate_word_count_from_file(path, class_id)
+    global doc_count
+
+    doc_count += 1
+
+print "Building model ..."
+for l in train:
+    l = l.strip()
+    p = l.split("/")
     user_id = p[0]
-    class_id = p[1]
-    doc = p[2]
-    docs[doc_id] = [class_id]
+    label = p[1]
+    file_name = p[2]
+    path = l
+    train_from_file(path, label)
 
-def get_class_prob(class_id):
-    if class_id in class_prob:
-        return class_prob[class_id]
+train.close()
+print "Model Built...."
+print "Testing Model..."
 
-    c.execute("select * from p_label_given_d where word = %s",(class_id))
-    r = c.fetchone()
-    rr = float(r[1])/float(len(docs.keys()))
-    class_prob[class_id] = rr
-    return rr
+test = open("test.txt")
 
-def get_word_prob_given_class(word_id, class_id):
-    num = 1
-    dendom = len(vocab.keys())
-    for doc_id in docs.keys():
-        n_it = get_doc_word_count(doc_id, word_id)
-        p_cj_given_di = get_prob_of_class_given_doc(class_id,doc_id)
-        num += n_it * p_cj_given_di
-    for doc_id in docs.keys():
-        n_is = vocab[word_id]
-        p_cj_given_di = get_prob_of_class_given_doc(class_id,doc_id)
-        dendom += n_is * p_cj_given_di
-    r = float(num)/float(dendom)
+def calculate_cj(label):
+    n = cj_di[label]
+    global doc_count
+    d = doc_count
+    r = math.log10(n) - math.log10(d)
+    return r
+
+def preprocess_wid_given_cj():
+    cc = len(vocab.keys())
     
-    word_class_probs[(word_id, class_id)] = r
-    return r
+    for c_id in n_c_i:
+        cached_wid_given_cj[c_id] = {}
+        
+        for w_id in vocab:
+            if w_id not in n_c_i[c_id]:
+                cached_wid_given_cj[c_id][w_id] = 1
+                continue
 
-def fact(n):
-    r = 1
-    if n == 0 or n == 1:
-        return r
-    for i in range(n,1,-1):
-        r *= i
-    return r
+            n = n_c_i[c_id][w_id] + 1
+            denom = nc[c_id] + cc
+            r = (math.log10(n) - math.log10(denom))
+            
+            cached_wid_given_cj[c_id][w_id] = r
 
-def get_prob_doc_given_class(doc_id,class_id):
-    if (doc_id,class_id) in doc_prob_given_class:
-        return doc_prob_given_class[(doc_id,class_id)]
 
-    r = fact(int(get_doc_length_prob(doc_id) * get_doc_length(doc_id)))
-    rr = 1
-    for word_id in vocab:
-        n = get_word_prob_given_class(word_id, class_id)
-        n_it = get_doc_word_count(doc_id, word_id)
-        rr *=float( math.pow(float(n),n_it)) / float(fact(n_it))
-    r *= rr
-    doc_prob_given_class[(doc_id, class_id)] = r
-    return r
-
-def get_doc_prob(doc_id):
-    if doc_id in doc_probs:
-        return doc_probs[doc_id]
-
+def calculate_di_given_cj(d, label):
     r = 0
-    for class_id in classes:
-        r += get_class_prob(class_id) * get_prob_doc_given_class(doc_id,class_id)
-    doc_probs[doc_id] = r
+
+    for w_id in d:
+        v1 = d[w_id]
+
+        v2 = 1
+        if w_id in cached_wid_given_cj[label]:
+            v2 = cached_wid_given_cj[label][w_id]
+
+        r += v1 * v2
+           
     return r
 
-def get_class_prob_given_doc(doc_id):
-    class_id = None
-    if doc_id not in docs:
-        get_docs(doc_id)
-        build_vocab(doc_id)
-        class_id = get_classes(doc_id)
+def test_for_file(doc_id, label):
+    d = build_word_count_from_document(doc_id)
+    
+    predicted_label = ""
+    pr = None
 
-    n = get_class_prob(class_id) * get_prob_doc_given_class(doc_id, class_id)
-    d = get_doc_prob(doc_id)
-    r = 0
-    if d > 0:
-        r = float(n)/float(d)
-    return r
+    result = [label]
+    
 
-def get_classes(doc_id):
-    p = doc_id.split('/')
-    user_id = p[0]
-    class_id = p[1]
-    doc = p[2]
-    if class_id not in classes:
-        classes[class_id] = 0
-    classes[class_id] += 1
-    return class_id
-               
-#get_docs()
-#get_classes()
-#print get_doc_length('beck-s/2001_plan/1.')
-#print get_doc_length_prob('beck-s/2001_plan/1.')
-#print get_doc_word_count('beck-s/2001_plan/1.','the')
-#print get_prob_of_class_given_doc('2001_plan','beck-s/2001_plan/1.')
-#print get_class_prob('bastos')
-#print get_word_prob_given_class('the','2001_plan')
-#print get_word_prob_given_class('the','bastos')
-#print get_prob_doc_given_class('beck-s/2001_plan/1.','2001_plan')
-#print get_doc_prob('beck-s/2001_plan/1.')
+    for c_id in n_c_i:
+        v1 = calculate_cj(c_id)
+        v2 = calculate_di_given_cj(d, c_id)
+        r = -(v1 + v2)
+        
+        if pr is None:
+            pr = r
+            predicted_label = c_id
+        elif r > pr:
+            pr = r
+            predicted_label = c_id
+        
+    result.append(pr)
+    result.append(predicted_label)
 
-cc = db.cursor()
-cc.execute("select * from timelines order by timelinevalue")
-for rr in cc:
-    path = rr[2] + "/" + rr[1]
-    r = get_class_prob_given_doc(path)
-    o.write(path + " " + str(r))
+    result = map(str, result)
+
+    oo =  " ".join(result)
+    print oo
+    o.write(oo)
     o.write("\n")
-    o.flush()
+
+print "Preprocessing "
+preprocess_wid_given_cj()
+
+for l in test:
+    l = l.strip()
+    p = l.split("/")
+    user_id = p[0]
+    label = p[1]
+    file_name = p[2]
+    path = l
+    test_for_file(path, label)
+
+test.close()
 
 db.close()
 o.close()
