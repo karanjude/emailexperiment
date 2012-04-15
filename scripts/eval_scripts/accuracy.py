@@ -9,11 +9,12 @@ n = 0
 for l in f:
     l = l.strip()
     p = l.split()
-    actual = p[0]
-    pr = p[1]
-    predicted = p[2]
-    if actual == predicted:
-        correct += 1
+    if len(p) > 1:
+        actual = p[0]
+    #pr = p[1]
+        predicted = p[1]
+        if actual == predicted:
+            correct += 1
 
     n += 1
 
