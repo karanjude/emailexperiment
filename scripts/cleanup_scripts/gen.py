@@ -3,8 +3,8 @@ import os
 
 
 train = open(sys.argv[1])
-input = sys.argv[3]
-output = sys.argv[4]
+input = sys.argv[2]
+output = sys.argv[3]
 
 
 for l in train:
