@@ -12,11 +12,12 @@ if len(sys.argv) <= 1:
 
 is_win32 = (sys.platform == 'win32')
 if not is_win32:
-	svmscale_exe = "/home/abhinav/Documents/abc/lib/svm-scale"
-	svmtrain_exe = "/home/abhinav/Documents/abc/lib/svm-train"
-	svmpredict_exe = "/home/abhinav/Documents/abc/lib/svm-predict"
-	grid_py = "/home/abhinav/Documents/abc/lib/grid.py"
-	gnuplot_exe = "/usr/bin/gnuplot"
+	svmscale_exe = os.path.join(os.path.abspath("."),"svm-scale")
+	print svmscale_exe
+	svmtrain_exe = os.path.join(os.path.abspath("."),"svm-train")
+	svmpredict_exe = os.path.join(os.path.abspath("."),"svm-predict")
+	grid_py = os.path.join(os.path.abspath("."),"grid.py")
+	gnuplot_exe = "/opt/local/bin/gnuplot"
 else:
         # example for windows
 	svmscale_exe = r"..\windows\svm-scale.exe"
