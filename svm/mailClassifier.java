@@ -72,9 +72,15 @@ public class mailClassifier {
 		int abc = 1;
 		int lable1 = 1;
 		int xyz = 1;
-		String output1 = "/home/abhinav/Documents/abc/lib/training1.txt";
-		String output2 = "/home/abhinav/Documents/abc/lib/testing1.txt";
-	    File dir = new File("/home/abhinav/Documents/proj599/trunk/test/lokay-m");  
+		//String output1 = "/home/abhinav/Documents/abc/lib/training1.txt";
+		String output1 = argv[0];
+		System.out.println(output1);
+		//String output2 = "/home/abhinav/Documents/abc/lib/testing1.txt";
+		String output2 = argv[1];
+		System.out.println(output2);
+		//File dir = new File("/home/abhinav/Documents/proj599/trunk/test/lokay-m"); 
+		File dir = new File(argv[3]); 
+		
 	    
 	       
 	    File[] subDirs = dir.listFiles(new FileFilter() {  
