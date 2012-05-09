@@ -9,6 +9,10 @@ if len(sys.argv) > 3:
 else:
     trainer = ""
 
+if len(sys.argv) > 4:
+    format = True
+else:
+    format = False
 
 def build_classifierss(src_dir, trainer):
     for l in os.listdir(src_dir):
@@ -129,12 +133,14 @@ def filter_output(src_dir, trainer):
         os.system(command)
 
 
-#generate_mallet_files(src_dir)
-#generate_mallet_files(test_dir)
-#generate_topic_inferers(src_dir)
-#infer_topics_for(test_dir)
-#gen_pmaps(src_dir)
-#test_classifier(src_dir)
-#filter_output(src_dir,trainer)
-#generate_accuracy(src_dir, trainer)
+if format == False:
+    generate_mallet_files(src_dir)
+    generate_mallet_files(test_dir)
+    generate_topic_inferers(src_dir)
+    infer_topics_for(test_dir)
+    gen_pmaps(src_dir)
+    test_classifier(src_dir)
+    filter_output(src_dir,trainer)
+    generate_accuracy(src_dir, trainer)
+
 format_accuracy(src_dir, trainer)
