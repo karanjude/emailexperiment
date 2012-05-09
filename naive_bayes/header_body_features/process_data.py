@@ -9,6 +9,10 @@ if len(sys.argv) > 3:
 else:
     trainer = ""
 
+if len(sys.argv) > 4:
+    fr = True
+else:
+    fr = False
 
 def build_classifierss(src_dir, trainer):
     for l in os.listdir(src_dir):
@@ -76,10 +80,10 @@ def filter_output(src_dir, trainer):
         print command
         os.system(command)
 
-
-#generate_mallet_files(src_dir)
-#build_classifierss(src_dir, trainer)
-#test_classifier(src_dir, trainer)
-#filter_output(src_dir,trainer)
-#generate_accuracy(src_dir, trainer)
+if fr == False:
+    generate_mallet_files(src_dir)
+    build_classifierss(src_dir, trainer)
+    test_classifier(src_dir, trainer)
+    filter_output(src_dir,trainer)
+    generate_accuracy(src_dir, trainer)
 format_accuracy(src_dir, trainer)
