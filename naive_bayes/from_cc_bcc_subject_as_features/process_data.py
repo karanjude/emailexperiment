@@ -9,11 +9,15 @@ if len(sys.argv) > 3:
 else:
     trainer = ""
 
+if len(sys.argv) > 4:
+    format = True
+else:
+    format = False
 
 def build_classifierss(src_dir, trainer):
     for l in os.listdir(src_dir):
         l = l.strip()
-        user_dir = os.path.join(src_dir, l, "*")
+        #user_dir = os.path.join(src_dir, l, "*")
         command = "../../libs/mallet/bin/mallet train-classifier --input %s.mallet --output-classifier %s_%s.classifier --trainer %s" % (l,l,trainer,trainer)
         print command
         os.system(command)
@@ -21,16 +25,18 @@ def build_classifierss(src_dir, trainer):
 def generate_mallet_files(src_dir):
     for l in os.listdir(src_dir):
         l = l.strip()
-        user_dir = os.path.join(src_dir, l, "*")
-        command = "../../libs/mallet/bin/mallet import-dir --input %s --output %s.mallet" % (user_dir , l)
+        user = l
+        user_dir = os.path.join(src_dir, user, "*")
+        command = "../../libs/mallet/bin/mallet import-dir --input %s --output %s.mallet" % (user_dir , user)
         print command
         os.system(command)
 
 def test_classifier(src_dir, trainer):
     for l in os.listdir(src_dir):
         l = l.strip()
-        user_dir = os.path.join(src_dir, l, "*")
-        command = "../../libs/mallet/bin/mallet classify-dir --input %s/%s/* --output %s_%s.out --classifier %s_%s.classifier" % (test_dir,l,l,trainer,l,trainer)
+        user = l
+        user_dir = os.path.join(src_dir, user, "*")
+        command = "../../libs/mallet/bin/mallet classify-dir --input %s/%s/* --output %s_%s.out --classifier %s_%s.classifier" % (test_dir,user,user,trainer,user,trainer)
         print command
         os.system(command)
 
@@ -77,9 +83,11 @@ def filter_output(src_dir, trainer):
         os.system(command)
 
 
-generate_mallet_files(src_dir)
-build_classifierss(src_dir, trainer)
-test_classifier(src_dir, trainer)
-filter_output(src_dir,trainer)
-generate_accuracy(src_dir, trainer)
+if format == False:
+    generate_mallet_files(src_dir)
+    build_classifierss(src_dir, trainer)
+    test_classifier(src_dir, trainer)
+    filter_output(src_dir,trainer)
+    generate_accuracy(src_dir, trainer)
+
 format_accuracy(src_dir, trainer)
