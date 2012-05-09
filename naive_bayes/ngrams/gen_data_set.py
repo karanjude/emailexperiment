@@ -11,7 +11,7 @@ os.system(command)
 def filter_file_contents(file_name , file_path, dest_path):
     try:
         f = open(file_path)
-    except:
+    except IOError:
         return
     r = []
 

@@ -9,7 +9,11 @@ command = "mkdir -p " + dest_dir
 os.system(command)
 
 def filter_file_contents(file_name , file_path, dest_path):
-    f = open(file_path)
+    try:
+        f = open(file_path)
+    except IOError:
+        return
+
     r = []
 
     tags = ["from:","bcc:","cc:","subject:"]
