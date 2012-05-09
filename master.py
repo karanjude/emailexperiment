@@ -81,7 +81,7 @@ def run_max_ent_with_from_as_features():
 
 ####3
 
-'''
+
 os.system("curl http://people.cs.umass.edu/~ronb/datasets/enron_flat.tar.gz -o enron_flat.tar.gz") 
 os.system("gunzip enron_flat.tar.gz")
 os.system("mkdir -p email_small")
@@ -90,16 +90,16 @@ os.chdir("email_small")
 os.system("tar -xvf enron_flat.tar")
 
 os.chdir(source)
-'''
 
-'''
+
+
 os.system("python gen_train_test_data.py data/seed_train.txt email_small train")
 os.system("python gen_train_test_data.py data/seed_test.txt email_small test")
-'''
-#os.system("rm email_small/enron_flat.tar")
+
+os.system("rm email_small/enron_flat.tar")
 os.system("python normalize_data.py email_small train test")
 
-'''
+
 run_svm()
 
 run_naive_bayes_with_cc_bcc_as_features()
@@ -119,4 +119,4 @@ run_max_ent_with_header_and_body_as_features()
 
 run_naive_bayes_with_from_as_features()
 run_max_ent_with_from_as_features()
-'''
+
