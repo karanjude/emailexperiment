@@ -151,14 +151,6 @@ def build_svm_files():
     os.system("make")
 
 
-#generate_input_files(src_dir, test_dir)
-#build_svm_files()
+generate_input_files(src_dir, test_dir)
+build_svm_files()
 run_svm()
-#generate_input_files(test_dir)
-#generate_topic_inferers(src_dir)
-#infer_topics_for(test_dir)
-#gen_pmaps(src_dir)
-#test_classifier(src_dir)
-#filter_output(src_dir,trainer)
-#generate_accuracy(src_dir, trainer)
-#format_accuracy(src_dir, trainer)
